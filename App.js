@@ -11,6 +11,10 @@ import ManageExpensesScreen from "./screens/ManageExpensesScreen";
 import RecentExpensesScreen from "./screens/RecentExpensesScreen";
 import IconButton from "./components/UI/IconButton";
 import { ExpensesContextProvider } from "./store/expenses-context";
+import LoginScreen from "./screens/auth/LoginScreen";
+import SignupScreen from "./screens/auth/SignupScreen";
+import AuthContextProvider, { AuthContext } from "./store/auth-context";
+import { useContext } from "react";
 
 const Stack = createNativeStackNavigator();
 const BottomTabs = createBottomTabNavigator();
@@ -61,32 +65,58 @@ function ExpensesOverview() {
   );
 }
 
+function AuthStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: GlobalStyles.colors.primary500 },
+        headerTintColor: "white",
+        contentStyle: { backgroundColor: GlobalStyles.colors.primary100 },
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function AuthenticatedStack() {
+  return (
+    <Stack.Navigator
+      initialRouteName="ExpensesOverview"
+      screenOptions={{
+        headerStyle: { backgroundColor: GlobalStyles.colors.primary500 },
+        headerTintColor: "white",
+      }}
+    >
+      <Stack.Screen
+        name="ExpensesOverview"
+        component={ExpensesOverview}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ManageExpense"
+        component={ManageExpensesScreen}
+        options={{ presentation: "modal" }}
+      />
+    </Stack.Navigator>
+  );
+}
+
 export default function App() {
+  const authCtx = useContext(AuthContext);
+
   return (
     <>
       <ExpensesContextProvider>
-        <NavigationContainer>
-          <Stack.Navigator
-            initialRouteName="ExpensesOverview"
-            screenOptions={{
-              headerStyle: { backgroundColor: GlobalStyles.colors.primary500 },
-              headerTintColor: "white",
-            }}
-          >
-            <Stack.Screen
-              name="ExpensesOverview"
-              component={ExpensesOverview}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ManageExpense"
-              component={ManageExpensesScreen}
-              options={{ presentation: "modal" }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
+        <AuthContextProvider>
+          <NavigationContainer>
+            {!authCtx.isAuthenticated && <AuthStack />}
+            {authCtx.isAuthenticated && <AuthenticatedStack />}
+          </NavigationContainer>
+        </AuthContextProvider>
       </ExpensesContextProvider>
       <StatusBar style="light" />
     </>
